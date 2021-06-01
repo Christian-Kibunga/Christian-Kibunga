@@ -1,0 +1,351 @@
+<html id="html">
+<head>
+    <title>Delta Meet</title>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no"/>
+    <!--CSS-->
+    <link rel="stylesheet" type="text/css" href="styles.css">
+    <!--Import-->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <!--JS-->
+</head>
+<style>
+    *{
+    overflow: hidden;
+    transition: 0.3s;
+    text-align: center;
+}
+body{
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+}
+.title{
+    top: 0;
+    width: 100%;
+    z-index: 1;
+    display: block;
+    position: absolute;
+    color: white;
+    margin: 0;
+    padding: 5px;
+}
+#join{
+    border: none;
+    outline: none;
+    color: white;
+    background-color: royalblue;
+    border-radius: 20px;
+    padding: 10px;
+    width: 300px;
+}
+.entry-modal{
+    width: 100%;
+    margin: auto;
+    z-index: 9999;
+    position: absolute;
+    padding: 5px;
+    color: #fff;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+}
+
+#notification{
+    position: absolute;
+    z-index: 1;
+    color: #fff;
+    margin: 0;
+    top: 0;
+    font-size: 18pt;
+    width: 100%;
+    background-color: orange;
+    text-align: center;
+}
+
+#join{
+    border: 2px solid royalblue;
+    outline: none;
+    color: white;
+    background-color: white;
+    border-radius: 5px;
+    padding: 10px;
+    color: royalblue;
+}
+button{
+    font-size: 15px;
+    cursor: pointer;
+}
+.room-input{
+  border: none;
+  padding:5px;
+  outline: none;
+  padding: 10px;
+  width: 300px;
+  background-color: white;
+  border-radius: 5px;
+}
+#room{
+    padding: 10px;
+    width: 300px;
+    cursor: pointer;
+    color: royalblue;
+    background-color: white;
+    border: none;
+    border-radius: 5px;
+    box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+}
+button{
+    margin: 3px;
+    padding: 5px;
+}
+
+#remote-video{
+    top: 0;
+    height: 100%;
+    width: 100%;
+    left: 0;
+    position: absolute;
+}
+#remote-video:hover #controls{
+    display: block;
+}
+#local-video{
+    top: 10;
+    height: 120px;
+    object-fit: cover;
+    width: 150px;
+    z-index: 1;
+    right: 10;
+    position: absolute;
+}
+#controls{
+    position: absolute;
+    width: fit-content;
+    background-color: #444444;
+    bottom: 0;
+    margin-bottom: 20px;
+    position: absolute;
+    border-radius: 5px;
+    padding: 1px;
+    margin-left: 30%;
+    display: none;
+}
+#controls button{
+    padding: 10px;
+    width: 60px;
+    font-size: 30px;
+    background-color: transparent;
+    color: white;
+    border: none;
+    outline: none;
+}
+#i{transform: rotate(-495deg);}
+#controls button:nth-child(5){
+    background-color: red;
+    border-radius: 5px;
+}
+</style>
+<script src="https://kit.fontawesome.com/b49b7e96e7.js" crossorigin="anonymous"></script>
+<body id="body" onload="showNotification()" style="background-image: url(pc.jpg);">
+<p id="notification" hidden></p>
+
+<div class="entry-modal" id="entry-modal">
+    <p>Create or Join Meeting</p>
+    <div id="form">
+    <input id="room-input" class="room-input" aria-autocomplete="none" placeholder="Enter Room ID" type="password" aria-hidden="true"><br>
+    <button onclick="joinRoom()" id="join"><i class="fa fa-video" aria-hidden="true" style="margin-right: 5px;"></i> Join</button>
+    </div>
+    <button onclick="createRoom()" id="room"><i class="fas fa-user-friends" style="margin-right: 5px;"></i> Create Meeting</button>
+
+	
+	<script type="text/javascript">
+    
+	</script>
+</div>
+
+<div class="meet-area">
+    <!-- Remote Video Element-->
+    <video id="remote-video" onmouseover="hover()"></video>
+    <!-- Local Video Element-->
+    <video id="local-video"></video>
+</div>
+
+<center>
+<div id="controls">
+    <button onclick="offVid()" type="button" title="pause"><i class="fas fa-video"></i></button>
+    <button onclick="question()" title="ask a qustion"><i class="fa fa-hand-paper-o" aria-hidden="true"></i></button>
+    <button onclick="muteVid()"  title="mute"><i class="fa fa-microphone" aria-hidden="true" id="mt"></i></button>
+    <button onclick="fullVid()" id="e"></button>
+    <button onclick="leave()"><i class="fa fa-phone" aria-hidden="true" id="i" title="end meeting"></i></button>
+</div>
+</center>
+
+<script>
+     new Notification('Hi there!')
+</script>
+<script async src="https://drv.tw/inc/wd.js"></script></body>
+<script src="videoCallApi.js"></script>
+<script src="script.js"></script>
+<script>
+    const PRE = "DELTA"
+const SUF = "MEET"
+var room_id;
+var getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+var local_stream;
+function createRoom(){
+    console.log("Creating Room")
+    let room = document.getElementById("room-input").value;
+    if(room == " " || room == "")   {
+        alert("Please enter room number")
+        return;
+    }
+    room_id = PRE+room+SUF;
+    let peer = new Peer(room_id)
+    peer.on('open', (id)=>{
+        console.log("Peer Connected with ID: ", id)
+        hideModal()
+        getUserMedia({video: true, audio: true}, (stream)=>{
+            local_stream = stream;
+            setLocalStream(local_stream)
+        },(err)=>{
+            console.log(err)
+        })
+        notify("Waiting for peer to join.")
+    })
+    peer.on('call',(call)=>{
+        call.answer(local_stream);
+        call.on('stream',(stream)=>{
+            setRemoteStream(stream)
+        })
+    })
+}
+
+function setLocalStream(stream){
+    
+    let video = document.getElementById("local-video");
+    video.srcObject = stream;
+    video.muted = true;
+    video.play();
+}
+function setRemoteStream(stream){
+   
+    let video = document.getElementById("remote-video");
+    video.srcObject = stream;
+    video.play();
+}
+
+function hideModal(){
+    document.getElementById("entry-modal").hidden = true;
+}
+
+function notify(msg){
+    let notification = document.getElementById("notification")
+    notification.innerHTML = msg
+    notification.hidden = false
+    setTimeout(()=>{
+        notification.hidden = true;
+    }, 3000)
+}
+
+function joinRoom(){
+    console.log("Joining Room")
+    let room = document.getElementById("room-input").value;
+    if(room == " " || room == "")   {
+        alert("Please enter room number")
+        return;
+    }
+    room_id = PRE+room+SUF;
+    hideModal()
+    let peer = new Peer()
+    peer.on('open', (id)=>{
+        console.log("Connected with Id: "+id)
+        getUserMedia({video: true, audio: true}, (stream)=>{
+            local_stream = stream;
+            setLocalStream(local_stream)
+            notify("Joining peer")
+            let call = peer.call(room_id, stream)
+            call.on('stream', (stream)=>{
+                setRemoteStream(stream);
+            })
+        }, (err)=>{
+            console.log(err)
+        })
+
+    })
+}
+
+function muteVid() {
+if (myVideo.muted) {
+    myVideo.muted = false;
+    document.getElementById("mt").style.color = "red";
+}else{
+    myVideo.muted = true;  
+    document.getElementById("mt").style.color = "white";  
+}
+}
+
+const myVideo = document.getElementById("local-video");
+const myRemote = document.getElementById("remote-video");
+
+function leave() {
+  window.confirm("Do you want to leave?");
+    window.close();
+}
+
+
+window.addEventListener('offline', function(event){
+    alert("You are offline please turn on internet connection to run website");
+    console.log("offline")
+});
+
+
+
+
+function hover() {
+    document.getElementById("controls").style.display = "block";
+}
+
+function fullVid() {
+    let elem = document.getElementById("body");
+    document.getElementById("e").innerHTML = iconC;
+    if (!document.fullscreenElement) {
+      elem.requestFullscreen().catch(err => {
+        alert(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+      });
+    } else {
+      document.exitFullscreen();
+      document.getElementById("e").innerHTML = iconE;
+
+    }
+  }
+const iconC = '<i class="fas fa-compress"></i>';
+const iconE = '<i class="fas fa-expand"></i>';
+
+document.getElementById("e").innerHTML = iconE;
+
+var isPushEnabled = false;
+
+window.addEventListener('load', function() {
+  var pushButton = document.querySelector('.js-push-button');
+  pushButton.addEventListener('click', function() {
+    if (isPushEnabled) {
+      unsubscribe();
+    } else {
+      subscribe();
+    }
+  });
+
+  // Check that service workers are supported, if so, progressively
+  // enhance and add push messaging support, otherwise continue without it.
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/service-worker.js')
+    .then(initialiseState);
+  } else {
+    console.warn('Service workers aren\'t supported in this browser.');
+  }
+});
+</script>
+</html>
